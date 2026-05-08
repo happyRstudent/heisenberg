@@ -14,7 +14,7 @@ export default async function QuoteDetailPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const shareBaseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const shareBaseUrl = process.env.NEXT_PUBLIC_SHARE_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://share.heisenberg.help";
   const quote = await prisma.quote.findUnique({
     where: { id },
     include: {

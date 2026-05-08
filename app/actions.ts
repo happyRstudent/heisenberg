@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { parsePriceToCents, parseQuantity, standardizeProductDescription } from "@/lib/formatting";
 import { prisma } from "@/lib/prisma";
 import { generateShareToken, maybeHashPassword } from "@/lib/share";
@@ -145,17 +146,39 @@ export async function createShareTokenAction(formData: FormData) {
       ? new Date("2099-12-31T23:59:59.000Z")
       : new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
 
-  const token = generateShareToken();
   const passwordHash = await maybeHashPassword(password);
+  const maxAttempts = 5;
+  let created = false;
 
-  await prisma.shareToken.create({
-    data: {
-      quoteId,
-      token,
-      expiresAt,
-      passwordHash,
-    },
-  });
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    const token = generateShareToken();
+    try {
+      await prisma.shareToken.create({
+        data: {
+          quoteId,
+          token,
+          expiresAt,
+          passwordHash,
+        },
+      });
+      created = true;
+      break;
+    } catch (error) {
+      const isTokenCollision =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002" &&
+        Array.isArray((error.meta as { target?: string[] } | undefined)?.target) &&
+        (error.meta as { target: string[] }).target.includes("token");
+
+      if (!isTokenCollision || attempt === maxAttempts - 1) {
+        throw error;
+      }
+    }
+  }
+
+  if (!created) {
+    throw new Error("Unable to generate a unique share link. Please try again.");
+  }
 
   revalidatePath(`/quotes/${quoteId}`);
 }
