@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Quote {
+  id          String       @id @default(cuid())
+  title       String
+  clientName  String?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  products    Product[]
+  shareTokens ShareToken[]
+}
+
+model Product {
+  id                  String   @id @default(cuid())
+  quoteId             String
+  quote               Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  name                String
+  shortDescription    String
+  standardizedSummary String
+  primaryImagePath    String?
+  detailImagePaths    String?
+  pricingTiers        String
+  sortOrder           Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([quoteId])
+}
+
+model ShareToken {
+  id           String   @id @default(cuid())
+  quoteId      String
+  quote        Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  token        String   @unique
+  passwordHash String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  revokedAt    DateTime?
+  lastViewedAt DateTime?
+
+  @@index([quoteId])
+  @@index([expiresAt])
+}
