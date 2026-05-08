@@ -61,7 +61,7 @@ npm run dev
 
 - SQLite database path is configured in `.env` via `DATABASE_URL` (`prisma/dev.db` for this project).
 - Public share host defaults to `https://share.heisenberg.help` and can be overridden with `NEXT_PUBLIC_SHARE_BASE_URL`.
-- Console password defaults to `123206` and can be overridden with `CONSOLE_PASSWORD`.
+- Console password defaults to `126206` and can be overridden with `CONSOLE_PASSWORD`.
 - Uploaded images are stored locally under `public/uploads`.
 - Share token passwords are hashed with `bcrypt` before storage.
 
